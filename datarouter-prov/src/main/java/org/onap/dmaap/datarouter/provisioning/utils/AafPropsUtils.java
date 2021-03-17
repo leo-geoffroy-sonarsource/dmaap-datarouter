@@ -25,7 +25,6 @@ import com.att.eelf.configuration.EELFManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import org.onap.aaf.cadi.PropAccess;
 
 public class AafPropsUtils {
 
@@ -38,46 +37,29 @@ public class AafPropsUtils {
     private static final String TRUSTSTORE_PATH_PROPERTY = "cadi_truststore";
     private static final String TRUSTSTORE_PASS_PROPERTY = "cadi_truststore_password";
 
-    private PropAccess propAccess;
 
     public AafPropsUtils(File propsFile) throws IOException {
-        propAccess = new PropAccess();
-        try {
-            propAccess.load(new FileInputStream(propsFile));
-        } catch (IOException e) {
-            eelfLogger.error("Failed to load props file: " + propsFile + "\n" + e.getMessage(), e);
-            throw e;
-        }
     }
 
     private String decryptedPass(String password) {
         String decryptedPass = null;
-        try {
-            decryptedPass = propAccess.decrypt(password, false);
-        } catch (IOException e) {
-            eelfLogger.error("Failed to decrypt " + password + " : " + e.getMessage(), e);
-        }
         return decryptedPass;
     }
 
-    public PropAccess getPropAccess() {
-        return propAccess;
-    }
-
     public String getKeystorePathProperty() {
-        return propAccess.getProperty(KEYSTORE_PATH_PROPERTY);
+        return "";
     }
 
     public String getKeystorePassProperty() {
-        return decryptedPass(propAccess.getProperty(KEYSTORE_PASS_PROPERTY));
+        return "";
     }
 
     public String getTruststorePathProperty() {
-        return propAccess.getProperty(TRUSTSTORE_PATH_PROPERTY);
+        return "";
     }
 
     public String getTruststorePassProperty() {
-        return decryptedPass(propAccess.getProperty(TRUSTSTORE_PASS_PROPERTY));
+        return decryptedPass("");
     }
 
 }

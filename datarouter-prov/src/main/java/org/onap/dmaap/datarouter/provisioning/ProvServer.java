@@ -47,7 +47,6 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.jetbrains.annotations.NotNull;
 import org.onap.dmaap.datarouter.provisioning.utils.AafPropsUtils;
-import org.onap.dmaap.datarouter.provisioning.utils.DRProvCadiFilter;
 import org.onap.dmaap.datarouter.provisioning.utils.ThrottleFilter;
 
 
@@ -216,21 +215,6 @@ public class ProvServer {
         servletContextHandler.addServlet(new ServletHolder(new DRFeedsServlet()), "/");
         servletContextHandler.addFilter(new FilterHolder(new ThrottleFilter()),
             "/publish/*", EnumSet.of(DispatcherType.REQUEST));
-        setCadiFilter(servletContextHandler, provProps);
         return servletContextHandler;
-    }
-
-    private static void setCadiFilter(ServletContextHandler servletContextHandler, Properties provProps) {
-        if (Boolean.parseBoolean(provProps.getProperty(
-            "org.onap.dmaap.datarouter.provserver.cadi.enabled", "false"))) {
-            try {
-                servletContextHandler.addFilter(new FilterHolder(new DRProvCadiFilter(
-                    true, ProvRunner.getAafPropsUtils().getPropAccess())), "/*", EnumSet.of(DispatcherType.REQUEST));
-                intlogger.info("PROV0001 AAF CADI filter enabled");
-            } catch (ServletException e) {
-                intlogger.error("PROV0001 Failed to add CADI filter to server");
-            }
-
-        }
     }
 }

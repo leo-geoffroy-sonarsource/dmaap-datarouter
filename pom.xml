@@ -29,11 +29,7 @@
     <version>${revision}</version>
     <packaging>pom</packaging>
     <url>https://docs.onap.org/en/latest/submodules/dmaap/datarouter.git/docs/index.html</url>
-    <parent>
-        <groupId>org.onap.oparent</groupId>
-        <artifactId>oparent</artifactId>
-        <version>3.0.0</version>
-    </parent>
+
     <properties>
         <!--revision must also be set in the version.properties file at project root-->
         <revision>2.1.9-SNAPSHOT</revision>
@@ -89,9 +85,6 @@
     </properties>
     <modules>
         <module>datarouter-prov</module>
-        <module>datarouter-node</module>
-        <module>datarouter-subscriber</module>
-        <module>datarouter-docker-compose</module>
     </modules>
     <dependencyManagement>
         <dependencies>
@@ -302,19 +295,11 @@
                     <excludes>
                         <exclude>IntegrationSuite.java</exclude>
                     </excludes>
-                    <argLine>
-                        ${surefireArgLine} --illegal-access=permit
-                    </argLine>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                    <argLine>
-                        --illegal-access=permit
-                    </argLine>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

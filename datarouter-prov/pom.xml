@@ -27,7 +27,6 @@
         <groupId>org.onap.dmaap.datarouter</groupId>
         <artifactId>parent</artifactId>
         <version>${revision}</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>datarouter-prov</artifactId>
     <packaging>jar</packaging>
@@ -239,60 +238,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <profiles>
-        <profile>
-            <id>docker</id>
-            <properties>
-                <skipTests>true</skipTests>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.gmaven</groupId>
-                        <artifactId>gmaven-plugin</artifactId>
-                    </plugin>
-                    <plugin>
-                        <groupId>io.fabric8</groupId>
-                        <artifactId>docker-maven-plugin</artifactId>
-                        <configuration>
-                            <images>
-                                <image>
-                                    <name>${datarouter.prov.image.name}</name>
-                                    <build>
-                                        <cleanup>try</cleanup>
-                                        <noCache>true</noCache>
-                                        <optimise>true</optimise>
-                                        <contextDir>${basedir}/target/docker-stage</contextDir>
-                                        <dockerFile>Dockerfile</dockerFile>
-                                        <tags>
-                                            <tag>${dockertag1}</tag>
-                                            <tag>${dockertag2}</tag>
-                                        </tags>
-                                    </build>
-                                </image>
-                            </images>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>generate-images</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>build</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>push-images</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>push</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
     <build>
         <finalName>datarouter-prov</finalName>
         <resources>

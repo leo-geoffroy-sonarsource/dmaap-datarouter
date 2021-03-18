@@ -156,16 +156,6 @@ public class StatisticsServlet extends BaseServlet {
         if (req.getParameter(OUTPUT_TYPE) != null) {
             map.put(OUTPUT_TYPE, req.getParameter(OUTPUT_TYPE));
         }
-        if (req.getParameter(START_TIME) != null) {
-            map.put(START_TIME, req.getParameter(START_TIME));
-        }
-        if (req.getParameter(END_TIME) != null) {
-            map.put(END_TIME, req.getParameter(END_TIME));
-        }
-        if (req.getParameter("time") != null) {
-            map.put(START_TIME, req.getParameter("time"));
-            map.put(END_TIME, null);
-        }
         if (req.getParameter(OUTPUT_TYPE) != null) {
             outputType = req.getParameter(OUTPUT_TYPE);
         }
@@ -286,66 +276,24 @@ public class StatisticsServlet extends BaseServlet {
 
         String sql;
         String feedids = null;
-        String startTime = null;
-        String endTime = null;
         String subid = " ";
 
         if (map.get(FEEDIDS) != null) {
             feedids = map.get(FEEDIDS);
-        }
-        if (map.get(START_TIME) != null) {
-            startTime = map.get(START_TIME);
-        }
-        if (map.get(END_TIME) != null) {
-            endTime =  map.get(END_TIME);
         }
         if (map.get(SUBID) != null) {
             subid = map.get(SUBID);
         }
 
         eventlogger.info("Generating sql query to get Statistics resultset. ");
+        sql =  SQL_SELECT_NAME + feedids + SQL_FEED_ID + SQL_SELECT_COUNT + feedids + SQL_TYPE_PUB
+            + SQL_SELECT_SUM
+            + feedids + SQL_PUBLISH_LENGTH
+            + SQL_SUBSCRIBER_URL + SQL_SUB_ID + SQL_DELIVERY_TIME + SQL_AVERAGE_DELAY + SQL_JOIN_RECORDS
+            + feedids + ") " + subid
+            + SQL_STATUS_204 + SQL_GROUP_SUB_ID;
 
-        if (endTime == null && startTime == null) {
-
-            sql =  SQL_SELECT_NAME + feedids + SQL_FEED_ID + SQL_SELECT_COUNT + feedids + SQL_TYPE_PUB
-                + SQL_SELECT_SUM
-                + feedids + SQL_PUBLISH_LENGTH
-                + SQL_SUBSCRIBER_URL + SQL_SUB_ID + SQL_DELIVERY_TIME + SQL_AVERAGE_DELAY + SQL_JOIN_RECORDS
-                + feedids + ") " + subid
-                + SQL_STATUS_204 + SQL_GROUP_SUB_ID;
-
-            return sql;
-        } else if (startTime != null && endTime == null) {
-
-            long inputTimeInMilli = 60000 * Long.parseLong(startTime);
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-            long currentTimeInMilli = cal.getTimeInMillis();
-            long compareTime = currentTimeInMilli - inputTimeInMilli;
-
-            sql = SQL_SELECT_NAME + feedids + SQL_FEED_ID + SQL_SELECT_COUNT + feedids + SQL_TYPE_PUB
-                + SQL_SELECT_SUM
-                + feedids + SQL_PUBLISH_LENGTH
-                + SQL_SUBSCRIBER_URL + SQL_SUB_ID + SQL_DELIVERY_TIME + SQL_AVERAGE_DELAY + SQL_JOIN_RECORDS
-                + feedids + ") " + subid
-                + SQL_STATUS_204 + " and e.event_time>=" + compareTime + SQL_GROUP_SUB_ID;
-            return sql;
-
-        } else {
-            SimpleDateFormat inFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-            Date startDate = inFormat.parse(startTime);
-            Date endDate = inFormat.parse(endTime);
-
-            long startInMillis = startDate.getTime();
-            long endInMillis = endDate.getTime();
-
-            sql = SQL_SELECT_NAME + feedids + SQL_FEED_ID + SQL_SELECT_COUNT + feedids + SQL_TYPE_PUB
-                + SQL_SELECT_SUM
-                + feedids + SQL_PUBLISH_LENGTH + SQL_SUBSCRIBER_URL
-                + SQL_SUB_ID + SQL_DELIVERY_TIME + SQL_AVERAGE_DELAY + SQL_JOIN_RECORDS + feedids + ")" + subid + SQL_STATUS_204
-                +" and e.event_time between " + startInMillis + " and " + endInMillis + SQL_GROUP_SUB_ID;
-
-            return sql;
-        }
+        return sql;
     }
 
 
@@ -509,8 +457,8 @@ public class StatisticsServlet extends BaseServlet {
             intlogger.debug(filterQuery);
             long start = System.currentTimeMillis();
             try (Connection conn = ProvDbUtils.getInstance().getConnection();
-                PreparedStatement ps = conn.prepareStatement(filterQuery);
-                ResultSet rs = ps.executeQuery()) {
+                 PreparedStatement ps = getPs(filterQuery, conn);
+                 ResultSet rs = ps.executeQuery()) {
                 if ("csv".equals(outputType)) {
                     resp.setContentType("application/octet-stream");
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
@@ -533,6 +481,10 @@ public class StatisticsServlet extends BaseServlet {
         } catch (ParseException e) {
             eventlogger.error("ParseException - executing SQL query:" + e);
         }
+    }
+
+    private PreparedStatement getPs(String filterQuery, Connection conn) throws SQLException {
+        return conn.prepareStatement(filterQuery);
     }
 }
 

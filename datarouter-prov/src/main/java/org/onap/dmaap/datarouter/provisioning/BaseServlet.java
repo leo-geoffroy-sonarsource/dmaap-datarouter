@@ -152,8 +152,6 @@ public class BaseServlet extends HttpServlet implements ProvDataProvider {
     static final String SUBID = "subid";
     static final String EVENT_TYPE = "eventType";
     static final String OUTPUT_TYPE = "output_type";
-    static final String START_TIME = "start_time";
-    static final String END_TIME = "end_time";
     static final String REASON_SQL = "reasonSQL";
     static final String JSON_HASH_STRING = "password";
 

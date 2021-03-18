@@ -142,12 +142,12 @@ public class StatisticsServlet extends BaseServlet {
         }
         if (req.getParameter(SUBID) != null && req.getParameter(FEEDID) != null) {
             String subidstr = "and e.DELIVERY_SUBID in("
-                + req.getParameter(SUBID).replace("|", ",") + ")";
+                + req.getParameter(SUBID) + ")";
             map.put(SUBID, subidstr);
         }
         if (req.getParameter(SUBID) != null && req.getParameter(GROUPID) != null) {
             String subidstr = "and e.DELIVERY_SUBID in("
-                + req.getParameter(SUBID).replace("|", ",") + ")";
+                + req.getParameter(SUBID) + ")";
             map.put(SUBID, subidstr);
         }
         if (req.getParameter("type") != null) {

@@ -489,12 +489,7 @@ public class StatisticsServlet extends BaseServlet {
         }
 
         eventlogger.info("Generating sql query to get Statistics resultset. ");
-        sql =  SQL_SELECT_NAME + feedids + SQL_FEED_ID + SQL_SELECT_COUNT + feedids + SQL_TYPE_PUB
-          + SQL_SELECT_SUM
-          + feedids + SQL_PUBLISH_LENGTH
-          + SQL_SUBSCRIBER_URL + SQL_SUB_ID + SQL_DELIVERY_TIME + SQL_AVERAGE_DELAY + SQL_JOIN_RECORDS
-          + feedids + ") " + subid
-          + SQL_STATUS_204 + SQL_GROUP_SUB_ID;
+        sql =  "SELECT * FROM LOG_RECORDS WHERE id in(" + feedids + ") and subid = " + subid;
           eventlogger.debug("SQL Query for Statistics resultset. " + sql);
         intlogger.debug(sql);
         return conn.prepareStatement(sql);

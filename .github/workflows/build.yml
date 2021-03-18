@@ -33,4 +33,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -X -B -Dsonar.projectKey=damien-urruty-sonarsource_dmaap-datarouter -Dsonar.login=${SONAR_TOKEN} verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+        run: mvn -X -B -Dsonar.projectKey=damien-urruty-sonarsource_dmaap-datarouter verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar

@@ -34,11 +34,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TimeZone;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -449,12 +447,9 @@ public class StatisticsServlet extends BaseServlet {
     private void getRecordsForSQL(Map<String, String> map, String outputType, ServletOutputStream out,
         HttpServletResponse resp) {
         try {
-            String filterQuery = this.queryGeneretor(map);
-            eventlogger.debug("SQL Query for Statistics resultset. " + filterQuery);
-            intlogger.debug(filterQuery);
             long start = System.currentTimeMillis();
             try (Connection conn = ProvDbUtils.getInstance().getConnection();
-                 PreparedStatement ps = getPs(filterQuery, conn);
+                 PreparedStatement ps = makePreparedStatement(map, conn);
                  ResultSet rs = ps.executeQuery()) {
                 if ("csv".equals(outputType)) {
                     resp.setContentType("application/octet-stream");
@@ -480,8 +475,29 @@ public class StatisticsServlet extends BaseServlet {
         }
     }
 
-    private PreparedStatement getPs(String filterQuery, Connection conn) throws SQLException {
-        return conn.prepareStatement(filterQuery);
+    private PreparedStatement makePreparedStatement(Map<String, String> map, Connection conn) throws SQLException, ParseException {
+
+        String sql;
+        String feedids = null;
+        String subid = " ";
+
+        if (map.get(FEEDIDS) != null) {
+            feedids = map.get(FEEDIDS);
+        }
+        if (map.get(SUBID) != null) {
+            subid = map.get(SUBID);
+        }
+
+        eventlogger.info("Generating sql query to get Statistics resultset. ");
+        sql =  SQL_SELECT_NAME + feedids + SQL_FEED_ID + SQL_SELECT_COUNT + feedids + SQL_TYPE_PUB
+          + SQL_SELECT_SUM
+          + feedids + SQL_PUBLISH_LENGTH
+          + SQL_SUBSCRIBER_URL + SQL_SUB_ID + SQL_DELIVERY_TIME + SQL_AVERAGE_DELAY + SQL_JOIN_RECORDS
+          + feedids + ") " + subid
+          + SQL_STATUS_204 + SQL_GROUP_SUB_ID;
+          eventlogger.debug("SQL Query for Statistics resultset. " + sql);
+        intlogger.debug(sql);
+        return conn.prepareStatement(sql);
     }
 }
 

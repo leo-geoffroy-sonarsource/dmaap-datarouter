@@ -118,7 +118,7 @@ public class StatisticsServlet extends BaseServlet {
             }
         }
         if (req.getParameter(FEEDID) != null && req.getParameter(GROUPID) == null) {
-            map.put(FEEDIDS, req.getParameter(FEEDID).replace("|", ","));
+            map.put(FEEDIDS, req.getParameter(FEEDID));
         }
         if (req.getParameter(GROUPID) != null && req.getParameter(FEEDID) == null) {
             StringBuilder groupid1;

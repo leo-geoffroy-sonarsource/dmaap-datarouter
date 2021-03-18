@@ -154,9 +154,6 @@ public class StatisticsServlet extends BaseServlet {
             map.put(EVENT_TYPE, req.getParameter("type").replace("|", ","));
         }
         if (req.getParameter(OUTPUT_TYPE) != null) {
-            map.put(OUTPUT_TYPE, req.getParameter(OUTPUT_TYPE));
-        }
-        if (req.getParameter(OUTPUT_TYPE) != null) {
             outputType = req.getParameter(OUTPUT_TYPE);
         }
         try {

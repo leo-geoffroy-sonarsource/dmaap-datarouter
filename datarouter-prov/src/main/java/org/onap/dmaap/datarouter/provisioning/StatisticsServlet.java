@@ -478,7 +478,7 @@ public class StatisticsServlet extends BaseServlet {
     private PreparedStatement makePreparedStatement(Map<String, String> map, Connection conn) throws SQLException, ParseException {
 
         String sql;
-        String feedids = null;
+        String feedids = "";
         String subid = " ";
 
         if (map.get(FEEDIDS) != null) {

@@ -41,8 +41,7 @@
         <releaseNexusPath>/content/repositories/releases/</releaseNexusPath>
         <stagingNexusPath>/content/repositories/staging/</stagingNexusPath>
         <sitePath>/content/sites/site/org/onap/dmaap/datarouter/${project.artifactId}/${project.version}</sitePath>
-	<sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
-        <sonar.projectKey>damien-urruty-sonarsource_dmaap-datarouter</sonar.projectKey>
+
         <sonar.organization>damien-urruty-sonarsource</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.language>java</sonar.language>

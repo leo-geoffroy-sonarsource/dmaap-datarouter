@@ -23,27 +23,21 @@
 
 package org.onap.dmaap.datarouter.provisioning;
 
-import static org.onap.dmaap.datarouter.provisioning.utils.HttpServletUtils.sendResponseError;
-
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.json.JSONException;
 import org.onap.dmaap.datarouter.provisioning.beans.EventLogRecord;
 import org.onap.dmaap.datarouter.provisioning.utils.LOGJSONObject;
-import org.onap.dmaap.datarouter.provisioning.utils.ProvDbUtils;
+
+import static org.onap.dmaap.datarouter.provisioning.utils.HttpServletUtils.sendResponseError;
 
 
 /**
@@ -77,7 +71,7 @@ public class StatisticsServlet extends BaseServlet {
     private static final String SQL_JOIN_RECORDS = " e JOIN LOG_RECORDS m ON m.PUBLISH_ID = e.PUBLISH_ID AND e.FEEDID IN (";
     private static final String SQL_STATUS_204 = " AND m.STATUS=204 AND e.RESULT=204 ";
     private static final String SQL_GROUP_SUB_ID = " group by SUBID";
-
+    private static final StatisticsRequestHandler requestHandler = new StatisticsRequestHandler();
 
     /**
      * DELETE a logging URL -- not supported.
@@ -97,7 +91,7 @@ public class StatisticsServlet extends BaseServlet {
      * <b>Statistics API</b> document for details on how this     method should be invoked.
      */
     @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) {
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Map<String, String> map = buildMapFromRequest(req);
         if (map.get("err") != null) {
             sendResponseError(resp, HttpServletResponse.SC_BAD_REQUEST,
@@ -107,188 +101,14 @@ public class StatisticsServlet extends BaseServlet {
         // check Accept: header??
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType(LOGLIST_CONTENT_TYPE);
+        String feedId = req.getParameter(FEEDID);
+        String groupId = req.getParameter(GROUPID);
         String outputType = "json";
-        if (req.getParameter(FEEDID) == null && req.getParameter(GROUPID) == null) {
-            try {
-                resp.getOutputStream().print("Invalid request, Feedid or Group ID is required.");
-            } catch (IOException ioe) {
-                eventlogger.error("PROV0171 StatisticsServlet.doGet: " + ioe.getMessage(), ioe);
-            }
-        }
-        if (req.getParameter(FEEDID) != null && req.getParameter(GROUPID) == null) {
-            map.put(FEEDIDS, req.getParameter(FEEDID));
-        }
-        if (req.getParameter(GROUPID) != null && req.getParameter(FEEDID) == null) {
-            StringBuilder groupid1;
-            try {
-                groupid1 = this.getFeedIdsByGroupId(Integer.parseInt(req.getParameter(GROUPID)));
-                map.put(FEEDIDS, groupid1.toString());
-            } catch (NumberFormatException e) {
-                eventlogger.error("PROV0172 StatisticsServlet.doGet: " + e.getMessage(), e);
-            }
-        }
-        if (req.getParameter(GROUPID) != null && req.getParameter(FEEDID) != null) {
-            StringBuilder groupid1;
-            try {
-                groupid1 = this.getFeedIdsByGroupId(Integer.parseInt(req.getParameter(GROUPID)));
-                groupid1.append(",");
-                groupid1.append(req.getParameter(FEEDID).replace("|", ","));
-                map.put(FEEDIDS, groupid1.toString());
-            } catch (NumberFormatException e) {
-                eventlogger.error("PROV0173 StatisticsServlet.doGet: " + e.getMessage(), e);
-            }
-        }
-        if (req.getParameter(SUBID) != null && req.getParameter(FEEDID) != null) {
-            String subidstr = "and e.DELIVERY_SUBID in("
-                + req.getParameter(SUBID) + ")";
-            map.put(SUBID, subidstr);
-        }
-        if (req.getParameter(SUBID) != null && req.getParameter(GROUPID) != null) {
-            String subidstr = "and e.DELIVERY_SUBID in("
-                + req.getParameter(SUBID) + ")";
-            map.put(SUBID, subidstr);
-        }
-        if (req.getParameter("type") != null) {
-            map.put(EVENT_TYPE, req.getParameter("type").replace("|", ","));
-        }
         if (req.getParameter(OUTPUT_TYPE) != null) {
             outputType = req.getParameter(OUTPUT_TYPE);
         }
-        try {
-            this.getRecordsForSQL(map, outputType, resp.getOutputStream(), resp);
-        } catch (IOException ioe) {
-            eventlogger.error("PROV0174 StatisticsServlet.doGet: " +  ioe.getMessage(), ioe);
-        }
-
-    }
-
-
-    /**
-     * rsToJson - Converting RS to JSON object.
-     *
-     * @param out ServletOutputStream
-     * @param rs as ResultSet
-     * @throws IOException input/output exception
-     * @throws SQLException SQL exception
-     */
-    private void rsToCSV(ResultSet rs, ServletOutputStream out) throws IOException, SQLException {
-        String header = "FEEDNAME,FEEDID,FILES_PUBLISHED,PUBLISH_LENGTH, FILES_DELIVERED, "
-            + "DELIVERED_LENGTH, SUBSCRIBER_URL, SUBID, PUBLISH_TIME,DELIVERY_TIME, AverageDelay\n";
-        out.write(header.getBytes());
-
-        while (rs.next()) {
-            String line = rs.getString("FEEDNAME")
-                + ","
-                + rs.getString(FEEDID)
-                + ","
-                + rs.getString("FILES_PUBLISHED")
-                + ","
-                + rs.getString("PUBLISH_LENGTH")
-                + ","
-                + rs.getString("FILES_DELIVERED")
-                + ","
-                + rs.getString("DELIVERED_LENGTH")
-                + ","
-                + rs.getString("SUBSCRIBER_URL")
-                + ","
-                + rs.getString("SUBID")
-                + ","
-                + rs.getString("PUBLISH_TIME")
-                + ","
-                + rs.getString("DELIVERY_TIME")
-                + ","
-                + rs.getString("AverageDelay")
-                + ","
-                + "\n";
-            out.write(line.getBytes());
-            out.flush();
-        }
-    }
-
-    /**
-     * rsToJson - Converting RS to JSON object.
-     *
-     * @param out ServletOutputStream
-     * @param rs as ResultSet
-     * @throws IOException input/output exception
-     * @throws SQLException SQL exception
-     */
-    private void rsToJson(ResultSet rs, ServletOutputStream out) throws IOException, SQLException {
-        String[] fields = {"FEEDNAME", FEEDID, "FILES_PUBLISHED", "PUBLISH_LENGTH", "FILES_DELIVERED",
-            "DELIVERED_LENGTH", "SUBSCRIBER_URL", "SUBID", "PUBLISH_TIME", "DELIVERY_TIME",
-            "AverageDelay"};
-        StringBuilder line = new StringBuilder();
-        line.append("[\n");
-        while (rs.next()) {
-            LOGJSONObject j2 = new LOGJSONObject();
-            for (String key : fields) {
-                Object val = rs.getString(key);
-                if (val != null) {
-                    j2.put(key.toLowerCase(), val);
-                } else {
-                    j2.put(key.toLowerCase(), "");
-                }
-            }
-            line.append(j2.toString());
-            line.append(",\n");
-        }
-        line.append("]");
-        out.print(line.toString());
-    }
-
-    /**
-     * getFeedIdsByGroupId - Getting FEEDID's by GROUP ID.
-     *
-     * @param groupIds Integer ref of Group
-     */
-    private StringBuilder getFeedIdsByGroupId(int groupIds) {
-        StringBuilder feedIds = new StringBuilder();
-        try (Connection conn = ProvDbUtils.getInstance().getConnection();
-            PreparedStatement prepareStatement = conn.prepareStatement(
-                " SELECT FEEDID from FEEDS  WHERE GROUPID = ?")) {
-            prepareStatement.setInt(1, groupIds);
-            try (ResultSet resultSet = prepareStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    feedIds.append(resultSet.getInt(FEEDID));
-                    feedIds.append(",");
-                }
-            }
-            feedIds.deleteCharAt(feedIds.length() - 1);
-            eventlogger.info("PROV0177 StatisticsServlet.getFeedIdsByGroupId: feedIds = " + feedIds.toString());
-        } catch (SQLException e) {
-            eventlogger.error("PROV0175 StatisticsServlet.getFeedIdsByGroupId: " + e.getMessage(), e);
-        }
-        return feedIds;
-    }
-
-
-    /**
-     * queryGeneretor - Generating sql query.
-     *
-     * @param map as key value pare of all user input fields
-     */
-    private String queryGeneretor(Map<String, String> map) throws ParseException {
-
-        String sql;
-        String feedids = null;
-        String subid = " ";
-
-        if (map.get(FEEDIDS) != null) {
-            feedids = map.get(FEEDIDS);
-        }
-        if (map.get(SUBID) != null) {
-            subid = map.get(SUBID);
-        }
-
-        eventlogger.info("Generating sql query to get Statistics resultset. ");
-        sql =  SQL_SELECT_NAME + feedids + SQL_FEED_ID + SQL_SELECT_COUNT + feedids + SQL_TYPE_PUB
-            + SQL_SELECT_SUM
-            + feedids + SQL_PUBLISH_LENGTH
-            + SQL_SUBSCRIBER_URL + SQL_SUB_ID + SQL_DELIVERY_TIME + SQL_AVERAGE_DELAY + SQL_JOIN_RECORDS
-            + feedids + ") " + subid
-            + SQL_STATUS_204 + SQL_GROUP_SUB_ID;
-
-        return sql;
+        ServletOutputStream responseStream = resp.getOutputStream();
+        requestHandler.handleRequest(resp, map, feedId, groupId, outputType, responseStream);
     }
 
 
@@ -442,57 +262,6 @@ public class StatisticsServlet extends BaseServlet {
         }
         intlogger.info("Error parsing time=" + str);
         return -1;
-    }
-
-    private void getRecordsForSQL(Map<String, String> map, String outputType, ServletOutputStream out,
-        HttpServletResponse resp) {
-        try {
-            long start = System.currentTimeMillis();
-            try (Connection conn = ProvDbUtils.getInstance().getConnection();
-                 PreparedStatement ps = makePreparedStatement(map, conn);
-                 ResultSet rs = ps.executeQuery()) {
-                if ("csv".equals(outputType)) {
-                    resp.setContentType("application/octet-stream");
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-                    resp.setHeader("Content-Disposition",
-                        "attachment; filename=\"result:" + LocalDateTime.now().format(formatter) + ".csv\"");
-                    eventlogger.info("Generating CSV file from Statistics resultset");
-                    rsToCSV(rs, out);
-                } else {
-                    eventlogger.info("Generating JSON for Statistics resultset");
-                    this.rsToJson(rs, out);
-                }
-            } catch (SQLException e) {
-                eventlogger.error("SQLException:" + e);
-            }
-            intlogger.debug("Time: " + (System.currentTimeMillis() - start) + " ms");
-        } catch (IOException e) {
-            eventlogger.error("IOException - Generating JSON/CSV:" + e);
-        } catch (JSONException e) {
-            eventlogger.error("JSONException - executing SQL query:" + e);
-        } catch (ParseException e) {
-            eventlogger.error("ParseException - executing SQL query:" + e);
-        }
-    }
-
-    private PreparedStatement makePreparedStatement(Map<String, String> map, Connection conn) throws SQLException, ParseException {
-
-        String sql;
-        String feedids = "";
-        String subid = " ";
-
-        if (map.get(FEEDIDS) != null) {
-            feedids = map.get(FEEDIDS);
-        }
-        if (map.get(SUBID) != null) {
-            subid = map.get(SUBID);
-        }
-
-        eventlogger.info("Generating sql query to get Statistics resultset. ");
-        sql =  "SELECT * FROM LOG_RECORDS WHERE id in(" + feedids + ") and subid = " + subid;
-          eventlogger.debug("SQL Query for Statistics resultset. " + sql);
-        intlogger.debug(sql);
-        return conn.prepareStatement(sql);
     }
 }
 

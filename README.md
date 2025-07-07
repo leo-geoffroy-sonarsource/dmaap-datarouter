@@ -79,8 +79,22 @@ What the Data Router is NOT:
 
 ## BUILD
 
-After Datarouter repository is cloned it can be built using Maven
-In the repository
+After Datarouter repository is cloned it can be built using Gradle or Maven.
+
+### Using Gradle (Recommended)
+In the repository root:
+
+```bash
+./gradlew build
+```
+
+To skip tests:
+```bash
+./gradlew build -x test
+```
+
+### Using Maven (Legacy)
+In the repository:
 
 Go to datarouter-prov in the root
 
@@ -136,9 +150,11 @@ Recommended
 
 Environment - Unix based
 
-Java - 1.8
+Java - 11 (Gradle) or 1.8 (Maven)
 
-Maven - 3.2.5
+Gradle - 7.6.4+ (included via wrapper)
+
+Maven - 3.2.5 (legacy)
 
 MariaDB - 10.2.14
 

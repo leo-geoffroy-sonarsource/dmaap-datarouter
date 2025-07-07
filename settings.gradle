@@ -1,0 +1,2 @@
+rootProject.name = 'dmaap-datarouter'
+include 'datarouter-prov' 

@@ -5,3 +5,10 @@
 *.classpath
 *.project
 datarouter-prov/unit-test-logs/
+
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties

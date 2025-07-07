@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+}
+
+allprojects {
+    group = 'org.onap.dmaap.datarouter'
+    version = '2.1.9-SNAPSHOT'
+    repositories {
+        mavenCentral()
+        maven {
+            url 'https://nexus3.onap.org/repository/maven-public/'
+        }
+        maven {
+            url 'https://nexus3.onap.org/repository/maven-snapshots/'
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+} 

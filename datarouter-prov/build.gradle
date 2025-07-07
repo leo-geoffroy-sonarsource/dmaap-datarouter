@@ -1,0 +1,85 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+dependencies {
+    implementation 'org.apache.commons:commons-lang3:3.0'
+    implementation 'org.mariadb.jdbc:mariadb-java-client:2.5.0'
+    implementation 'org.apache.commons:commons-dbcp2:2.7.0'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'commons-codec:commons-codec:1.15'
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'ch.qos.logback:logback-core:1.2.3'
+    implementation 'org.json:json:20160810'
+    implementation 'com.intellij:annotations:12.0'
+    implementation 'javax.servlet:javax.servlet-api:4.0.1'
+    implementation 'javax.mail:javax.mail-api:1.5.5'
+    implementation 'com.att.eelf:eelf-core:1.0.0'
+    implementation 'org.eclipse.jetty:jetty-server:9.4.20.v20190813'
+    implementation 'org.eclipse.jetty:jetty-continuation:9.4.20.v20190813'
+    implementation 'org.eclipse.jetty:jetty-util:9.4.20.v20190813'
+    implementation 'org.eclipse.jetty:jetty-servlet:9.4.20.v20190813'
+    implementation 'org.eclipse.jetty:jetty-http:9.4.20.v20190813'
+    implementation 'org.eclipse.jetty:jetty-io:9.4.20.v20190813'
+    implementation 'commons-io:commons-io:2.7'
+    implementation 'org.apache.httpcomponents:httpcore:4.4'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.3'
+    // implementation 'org.onap.aaf.authz:aaf-cadi-core:2.1.15' // Not actually used in the code
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:3.3.3'
+    testImplementation 'org.powermock:powermock-module-junit4:2.0.7'
+    testImplementation 'org.powermock:powermock-api-mockito2:2.0.7'
+    testImplementation 'org.powermock:powermock-api-support:2.0.7'
+    testImplementation 'org.powermock:powermock-core:2.0.7'
+    testImplementation 'org.powermock:powermock-module-junit4-rule:2.0.7'
+    testImplementation 'net.bytebuddy:byte-buddy:1.10.9'
+    testImplementation 'net.bytebuddy:byte-buddy-agent:1.10.9'
+    testImplementation 'org.objenesis:objenesis:3.1'
+    testImplementation 'org.javassist:javassist:3.27.0-GA'
+    testImplementation 'com.h2database:h2:1.4.197'
+    testImplementation 'org.hibernate:hibernate-core:5.4.2.Final'
+    testImplementation 'org.hamcrest:hamcrest-all:1.3'
+    testImplementation 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final'
+}
+
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'org.onap.dmaap.datarouter.provisioning.ProvRunner'
+        )
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('datarouter-prov')
+    archiveClassifier.set('all')
+    archiveVersion.set('')
+    manifest {
+        attributes 'Main-Class': 'org.onap.dmaap.datarouter.provisioning.ProvRunner'
+    }
+}
+
+task copyDockerResources(type: Copy) {
+    from('src/main/resources/docker') {
+        include 'Dockerfile'
+        into '.'
+    }
+    from('src/main/resources/docker') {
+        include 'startup.sh'
+        into 'opt'
+    }
+    from('src/main/resources') {
+        include 'misc/**', '**/**'
+        exclude 'aaf/**', 'docker/**'
+        into 'opt/app/datartr/etc'
+    }
+    from('src/main/resources/aaf') {
+        include '**/**'
+        into 'opt/app/osaaf/local'
+    }
+    into "$buildDir/docker-stage"
+}
+
+build.dependsOn copyDockerResources 
